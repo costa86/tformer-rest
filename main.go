@@ -16,15 +16,18 @@ const port = 3000
 
 const cvRoute = "config-versions"
 const varRoute = "variables"
-
-// const wsRoute = "workspaces"
+const wsRoute = "workspaces"
+const orgRoute = "organizations"
 
 func main() {
 	r := gin.Default()
+
 	//workspace
-	r.GET("/workspaces", workspace.GetAll)
-	r.GET("/workspaces/:id", workspace.GetById)
-	r.GET("/workspaces/lock/:id", workspace.Lock) //not working
+	r.GET(fmt.Sprintf("/%s", wsRoute), workspace.GetAll)
+	r.GET(fmt.Sprintf("/%s/:id", wsRoute), workspace.GetById)
+	r.POST(fmt.Sprintf("/%s", wsRoute), workspace.Create)
+	r.DELETE(fmt.Sprintf("/%s/:id", wsRoute), workspace.DeleteById)
+
 	//config version
 	r.GET(fmt.Sprintf("/%s", cvRoute), cv.GetAll)
 	r.GET(fmt.Sprintf("/%s/:id", cvRoute), cv.GetById)
@@ -35,12 +38,14 @@ func main() {
 	//variable
 	r.GET(fmt.Sprintf("/%s/:ws-id", varRoute), variable.GetAll)
 	r.GET(fmt.Sprintf("/%s", varRoute), variable.GetById)
+	r.POST(fmt.Sprintf("/%s", varRoute), variable.Create)
 
-	r.POST("/variable", variable.Create)
 	//organization
-	r.GET("/organizations", organization.GetAll)
-	r.GET("/organizations/:name", organization.GetByName)
+	r.GET(fmt.Sprintf("/%s", orgRoute), organization.GetAll)
+	r.GET(fmt.Sprintf("/%s/:name", orgRoute), organization.GetByName)
+
 	//user
 	r.GET("/whoami", user.Get)
+
 	r.Run(fmt.Sprintf(":%d", port))
 }

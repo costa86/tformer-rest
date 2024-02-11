@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -27,6 +28,11 @@ type Variable struct {
 
 type WsLock struct {
 	FieldA string `form:"field_a"`
+}
+
+type WsCreation struct {
+	Name    string `json:"name"`
+	OrgName string `json:"orgName"`
 }
 
 func listWorkspaces(client tfe.Client, orgName string) (*tfe.WorkspaceList, error) {
@@ -93,13 +99,59 @@ func GetById(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, ws)
 }
 
-func getById(client tfe.Client, id string) (*tfe.Workspace, error) {
-	ws, err := client.Workspaces.ReadByID(context.Background(), id)
-	return ws, err
-
+func create(client tfe.Client, name, organization string) (tfe.Workspace, error) {
+	ctx := context.Background()
+	result, err := client.Workspaces.Create(ctx, organization, tfe.WorkspaceCreateOptions{Name: tfe.String(name)})
+	return *result, err
 }
 
-func Lock(c *gin.Context) {
+func getByName(client tfe.Client, org, name string) (*tfe.Workspace, error) {
+	ws, err := client.Workspaces.Read(context.Background(), org, name)
+	return ws, err
+}
+
+func Create(c *gin.Context) {
+	var newWorkspace WsCreation
+	err := c.BindJSON(&newWorkspace)
+
+	if helper.IssueWasFound(c, "", http.StatusBadRequest, err) {
+		return
+	}
+
+	client, err := helper.GetClient(helper.GetToken(c))
+
+	if helper.IssueWasFound(c, "", http.StatusBadRequest, err) {
+		return
+	}
+
+	existingWs, err := getByName(*client, newWorkspace.OrgName, newWorkspace.Name)
+
+	if helper.IssueWasFound(c, "", http.StatusBadRequest, err) {
+		return
+	}
+
+	fmt.Println(existingWs)
+
+	if existingWs != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"message": fmt.Sprintf("workspace already exists: %s", existingWs.Name),
+		})
+		return
+	}
+
+	res, err := create(*client, newWorkspace.Name, newWorkspace.OrgName)
+	fmt.Println(res)
+
+	if helper.IssueWasFound(c, "", http.StatusBadRequest, err) {
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": fmt.Sprintf("workspace created: %s", res.Name),
+	})
+}
+
+func DeleteById(c *gin.Context) {
 	id := c.Param("id")
 
 	ctx := context.Background()
@@ -110,17 +162,13 @@ func Lock(c *gin.Context) {
 		return
 	}
 
-	ws, err := getById(*client, id)
+	err = client.Workspaces.DeleteByID(ctx, id)
 
 	if helper.IssueWasFound(c, "", http.StatusBadRequest, err) {
 		return
 	}
 
-	workspace, er := client.Workspaces.Unlock(ctx, ws.ID)
-
-	if helper.IssueWasFound(c, "", http.StatusBadRequest, er) {
-		return
-	}
-
-	c.IndentedJSON(http.StatusOK, workspace.Name)
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("workspace deleted: %s", id),
+	})
 }
