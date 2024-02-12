@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/costa86/tformer-rest/cloud/aws"
 	cv "github.com/costa86/tformer-rest/config_version"
 	"github.com/costa86/tformer-rest/organization"
 	"github.com/costa86/tformer-rest/user"
@@ -13,7 +14,6 @@ import (
 )
 
 const port = 3000
-
 const cvRoute = "config-versions"
 const varRoute = "variables"
 const wsRoute = "workspaces"
@@ -21,6 +21,9 @@ const orgRoute = "organizations"
 
 func main() {
 	r := gin.Default()
+
+	//aws
+	r.POST("/aws/other", aws.ProvisionOther)
 
 	//workspace
 	r.GET(fmt.Sprintf("/%s", wsRoute), workspace.GetAll)
@@ -31,9 +34,6 @@ func main() {
 	//config version
 	r.GET(fmt.Sprintf("/%s", cvRoute), cv.GetAll)
 	r.GET(fmt.Sprintf("/%s/:id", cvRoute), cv.GetById)
-
-	//run
-	// r.POST("/runs", run.Create)
 
 	//variable
 	r.GET(fmt.Sprintf("/%s/:ws-id", varRoute), variable.GetAll)
