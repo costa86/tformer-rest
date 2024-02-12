@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/costa86/tformer-rest/database"
 	"github.com/costa86/tformer-rest/helper"
 	"github.com/gin-gonic/gin"
 )
@@ -74,4 +75,12 @@ func ProvisionOther(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": string(res),
 	})
+
+	user, err := client.Users.ReadCurrent(ctx)
+
+	if helper.IssueWasFound(c, "", http.StatusBadRequest, err) {
+		return
+	}
+
+	database.ProvisionCreate(user.Email, resource.Name, ws.Name, org, message)
 }

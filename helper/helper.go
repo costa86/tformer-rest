@@ -22,7 +22,7 @@ type OrganizationWorkspace struct {
 	WsName  string `form:"ws"`
 }
 
-const Address = "https://tfe.d.bbg/app"
+const Address = "https://app.terraform.io"
 
 type Variable struct {
 	Key          string `json:"key" binding:"required"`
@@ -117,6 +117,7 @@ func ProvisionTerraform(virtualFile, workspaceName, message, token, org, address
 		message,
 		"-aa",
 	}
+	fmt.Println(args)
 
 	command := exec.Command("./tformer", args...)
 	output, err := command.CombinedOutput()

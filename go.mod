@@ -5,6 +5,9 @@ go 1.21.1
 require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/hashicorp/go-tfe v1.44.0
+	github.com/mattn/go-sqlite3 v1.14.22
+	gorm.io/driver/sqlite v1.5.5
+	gorm.io/gorm v1.25.7
 )
 
 require (
@@ -23,6 +26,8 @@ require (
 	github.com/hashicorp/go-slug v0.13.4 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/jsonapi v1.3.1 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/kr/pretty v0.3.1 // indirect

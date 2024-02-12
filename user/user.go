@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/costa86/tformer-rest/helper"
+	"github.com/costa86/tformer-rest/database"
 
+	"github.com/costa86/tformer-rest/helper"
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func Get(c *gin.Context) {
@@ -24,5 +26,5 @@ func Get(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, user)
-
+	database.WhoamiCreate(user.Username)
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/costa86/tformer-rest/cloud/aws"
 	cv "github.com/costa86/tformer-rest/config_version"
+	"github.com/costa86/tformer-rest/database"
 	"github.com/costa86/tformer-rest/organization"
 	"github.com/costa86/tformer-rest/user"
 	"github.com/costa86/tformer-rest/variable"
@@ -46,6 +47,9 @@ func main() {
 
 	//user
 	r.GET("/whoami", user.Get)
+
+	//database
+	r.GET("/records/whoami", database.WhoamiGet)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }
