@@ -22,7 +22,7 @@ type OrganizationWorkspace struct {
 	WsName  string `form:"ws"`
 }
 
-const Address = "https://app.terraform.io"
+const Address = "https://tfe.d.bbg/app"
 
 type Variable struct {
 	Key          string `json:"key" binding:"required"`
@@ -59,7 +59,7 @@ func GetClient(token string) (*tfe.Client, error) {
 	config := &tfe.Config{
 		Token:             token,
 		RetryServerErrors: true,
-		Address:           "https://app.terraform.io",
+		Address:           Address,
 	}
 
 	client, err := tfe.NewClient(config)

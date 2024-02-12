@@ -10,9 +10,7 @@ import (
 )
 
 func Get(c *gin.Context) {
-
 	ctx := context.Background()
-
 	client, err := helper.GetClient(helper.GetToken(c))
 
 	if helper.IssueWasFound(c, "", http.StatusBadRequest, err) {
