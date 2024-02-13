@@ -66,7 +66,7 @@ func ProvisionOther(c *gin.Context) {
 		value = random_pet.name_one
 		}`, resource.Name, resource.Count)
 
-	res, err := helper.ProvisionTerraform(terraformFile, ws.Name, message, token, org, helper.Address)
+	res, err := helper.ProvisionTerraform(*client, *ws, terraformFile, message, token, org, helper.Address)
 
 	if helper.IssueWasFound(c, "", http.StatusBadRequest, err) {
 		return

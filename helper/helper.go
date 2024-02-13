@@ -1,11 +1,11 @@
 package helper
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"math/big"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -87,7 +87,7 @@ func generateRandomString(length int) string {
 	return result
 }
 
-func ProvisionTerraform(virtualFile, workspaceName, message, token, org, address string) ([]byte, error) {
+func ProvisionTerraform(client tfe.Client, ws tfe.Workspace, virtualFile, message, token, org, address string) (string, error) {
 	randomName := generateRandomString(10)
 	configFileName := fmt.Sprintf("%s.tf", randomName)
 
@@ -96,31 +96,37 @@ func ProvisionTerraform(virtualFile, workspaceName, message, token, org, address
 	err := os.WriteFile(configFilePath, []byte(virtualFile), 0644)
 
 	if err != nil {
-		return nil, err
+		return "issue writing terraform file", err
 	}
 
-	args := []string{
-		"-address",
-		address,
-		"-org",
-		org,
-		"-token",
-		token,
-		"run_create",
-		"-ws",
-		workspaceName,
-		"-dir",
-		randomName,
-		"-cv_id",
-		"",
-		"-msg",
-		message,
-		"-aa",
-	}
-	fmt.Println(args)
+	ctx := context.Background()
 
-	command := exec.Command("./tformer", args...)
-	output, err := command.CombinedOutput()
+	cv, err := client.ConfigurationVersions.Create(ctx, ws.ID, tfe.ConfigurationVersionCreateOptions{
+		AutoQueueRuns: tfe.Bool(false),
+		Speculative:   tfe.Bool(false),
+	})
+
+	if err != nil {
+		return "issue creating configuration version", err
+	}
+
+	err = client.ConfigurationVersions.Upload(ctx, cv.UploadURL, randomName)
+
+	if err != nil {
+		return "issue uploading configuration version", err
+	}
+
+	result, err := client.Runs.Create(ctx, tfe.RunCreateOptions{
+		AutoApply:            tfe.Bool(true),
+		Workspace:            &ws,
+		ConfigurationVersion: cv,
+		IsDestroy:            tfe.Bool(false),
+		Message:              tfe.String(message)})
+
+	if err != nil {
+		return "issue creating run", err
+	}
+
 	os.RemoveAll(randomName)
-	return output, err
+	return result.ID, err
 }
