@@ -1,78 +1,79 @@
 package database
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/costa86/tformer-rest/helper"
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const dbFile = "test.db"
+type User struct {
+	Username  string
+	Timestamp string
+}
 
-func GetDB() (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+const mongoUsername = "costalorenzo1986"
+const mongoPassword = "1BUB1ZjsQJqR6w5g"
+
+func getAllUsers(filter interface{}, collection mongo.Collection) ([]*User, error) {
+	var records []*User
+	ctx := context.Background()
+
+	cur, err := collection.Find(ctx, filter)
 	if err != nil {
-		return nil, err
+		return records, err
 	}
-	return db, nil
-}
 
-type WhoamiModel struct {
-	gorm.Model
-	Username string
-}
+	for cur.Next(ctx) {
+		var t User
+		err := cur.Decode(&t)
+		if err != nil {
+			return records, err
+		}
 
-type ProvisionModel struct {
-	gorm.Model
-	Username     string
-	Name         string
-	Workspace    string
-	Organization string
-	Message      string
+		records = append(records, &t)
+	}
+
+	if err := cur.Err(); err != nil {
+		return records, err
+	}
+	cur.Close(ctx)
+
+	if len(records) == 0 {
+		return records, mongo.ErrNoDocuments
+	}
+
+	return records, nil
+}
+func SaveToMongoDb(username, timestamp string) error {
+	ctx := context.Background()
+	client, err := getMongo(mongoUsername, mongoPassword)
+
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database("mydb").Collection("mycollection")
+
+	record := User{Username: username, Timestamp: timestamp}
+
+	_, err = collection.InsertOne(ctx, record)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func WhoamiCreate(username string) error {
-	db, err := GetDB()
-
-	if err != nil {
-		return err
-	}
-	db.AutoMigrate(&WhoamiModel{})
-	db.Create(&WhoamiModel{Username: username})
+	SaveToMongoDb(username, helper.GetCurrentTimestamp())
 	return nil
-}
-
-func ProvisionCreate(username, name, workspace, organization, message string) error {
-	db, err := GetDB()
-
-	if err != nil {
-		return err
-	}
-	db.AutoMigrate(&ProvisionModel{})
-	db.Create(&ProvisionModel{
-		Username:     username,
-		Name:         name,
-		Workspace:    workspace,
-		Organization: organization,
-		Message:      message,
-	})
-	return nil
-}
-
-func whoamiGet() ([]WhoamiModel, error) {
-	db, err := GetDB()
-
-	if err != nil {
-		return nil, err
-	}
-	var records []WhoamiModel
-
-	if err := db.Find(&records).Error; err != nil {
-		return nil, err
-	}
-	return records, nil
 }
 
 func WhoamiGet(c *gin.Context) {
@@ -82,11 +83,28 @@ func WhoamiGet(c *gin.Context) {
 		return
 	}
 
-	records, err := whoamiGet()
+	client, err := getMongo(mongoUsername, mongoPassword)
 
-	if helper.IssueWasFound(c, "", http.StatusBadRequest, err) {
+	if err != nil {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, records)
+	collection := client.Database("mydb").Collection("mycollection")
+
+	filter := bson.D{{}}
+	res, err := getAllUsers(filter, *collection)
+
+	if err != nil {
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, res)
+}
+
+func getMongo(username, password string) (*mongo.Client, error) {
+	ctx := context.Background()
+	url := fmt.Sprintf("mongodb+srv://%s:%s@main.on0grqm.mongodb.net/?retryWrites=true&w=majority", username, password)
+	clientOptions := options.Client().ApplyURI(url)
+	client, err := mongo.Connect(ctx, clientOptions)
+	return client, err
 }

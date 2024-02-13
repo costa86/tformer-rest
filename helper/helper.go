@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/go-tfe"
@@ -22,9 +23,9 @@ type OrganizationWorkspace struct {
 	WsName  string `form:"ws"`
 }
 
-// const Address = "https://app.terraform.io"
+const Address = "https://app.terraform.io"
 
-const Address = "https://tfe.d.bbg"
+// const Address = "https://tfe.d.bbg"
 
 type Variable struct {
 	Key          string `json:"key" binding:"required"`
@@ -131,4 +132,8 @@ func ProvisionTerraform(client tfe.Client, ws tfe.Workspace, virtualFile, messag
 
 	os.RemoveAll(randomName)
 	return result.ID, err
+}
+
+func GetCurrentTimestamp() string {
+	return time.Now().String()[:16]
 }
