@@ -17,8 +17,8 @@ type User struct {
 	Timestamp string
 }
 
-const mongoUsername = "costalorenzo1986"
-const mongoPassword = "1BUB1ZjsQJqR6w5g"
+const mongoUsername = ""
+const mongoPassword = ""
 
 func getAllUsers(filter interface{}, collection mongo.Collection) ([]*User, error) {
 	var records []*User
