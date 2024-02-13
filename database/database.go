@@ -17,8 +17,16 @@ type User struct {
 	Timestamp string
 }
 
-const mongoUsername = ""
-const mongoPassword = ""
+type Provision struct {
+	User
+	Organization string
+	Message      string
+	Workspace    string
+}
+
+const mongoUsername = "costalorenzo1986"
+const mongoPassword = "1BUB1ZjsQJqR6w5g"
+const mongoDBName = "mydb"
 
 func getAllUsers(filter interface{}, collection mongo.Collection) ([]*User, error) {
 	var records []*User
@@ -50,7 +58,7 @@ func getAllUsers(filter interface{}, collection mongo.Collection) ([]*User, erro
 
 	return records, nil
 }
-func SaveToMongoDb(username, timestamp string) error {
+func saveWhoamiToMongoDb(username, timestamp string) error {
 	ctx := context.Background()
 	client, err := getMongo(mongoUsername, mongoPassword)
 
@@ -58,7 +66,7 @@ func SaveToMongoDb(username, timestamp string) error {
 		return err
 	}
 
-	collection := client.Database("mydb").Collection("mycollection")
+	collection := client.Database(mongoDBName).Collection("whoami")
 
 	record := User{Username: username, Timestamp: timestamp}
 
@@ -71,8 +79,36 @@ func SaveToMongoDb(username, timestamp string) error {
 	return nil
 }
 
+func saveProvisionToMongoDb(username, orgName, wsName, message string) error {
+	ctx := context.Background()
+	client, err := getMongo(mongoUsername, mongoPassword)
+
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database(mongoDBName).Collection("provision")
+
+	user := User{Username: username, Timestamp: helper.GetCurrentTimestamp()}
+
+	record := Provision{User: user, Organization: orgName, Workspace: wsName, Message: message}
+
+	_, err = collection.InsertOne(ctx, record)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func WhoamiCreate(username string) error {
-	SaveToMongoDb(username, helper.GetCurrentTimestamp())
+	saveWhoamiToMongoDb(username, helper.GetCurrentTimestamp())
+	return nil
+}
+
+func ProvisionCreate(username, orgName, wsName, message string) error {
+	saveProvisionToMongoDb(username, orgName, wsName, message)
 	return nil
 }
 
