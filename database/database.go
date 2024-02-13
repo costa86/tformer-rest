@@ -5,7 +5,6 @@ import (
 
 	"github.com/costa86/tformer-rest/helper"
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
