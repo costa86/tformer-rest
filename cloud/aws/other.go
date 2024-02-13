@@ -73,7 +73,7 @@ func ProvisionOther(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": string(res),
+		"message": res,
 	})
 
 	user, err := client.Users.ReadCurrent(ctx)
