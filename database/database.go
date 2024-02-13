@@ -125,7 +125,7 @@ func WhoamiGet(c *gin.Context) {
 		return
 	}
 
-	collection := client.Database("mydb").Collection("mycollection")
+	collection := client.Database("mydb").Collection("whoami")
 
 	filter := bson.D{{}}
 	res, err := getAllUsers(filter, *collection)

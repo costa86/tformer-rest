@@ -1,0 +1,183 @@
+openapi: 3.0.0
+info:
+  title: tformer
+  version: 1.0.0
+servers:
+  - url: localhost://
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /3000/whoami:
+    get:
+      tags:
+        - default
+      summary: whoami
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /3000/records/whoami:
+    get:
+      tags:
+        - default
+      summary: whoami DB
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /3000/workspaces:
+    get:
+      tags:
+        - default
+      summary: workspaces
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: org
+          in: query
+          schema:
+            type: string
+          description: organization name
+          example: costa-org
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /3000/organizations:
+    get:
+      tags:
+        - default
+      summary: organizations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /3000/organizations/costa-org:
+    get:
+      tags:
+        - default
+      summary: organizations by name
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /3000/config-versions:
+    get:
+      tags:
+        - default
+      summary: config versions by workspace id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ws-id
+          in: query
+          schema:
+            type: string
+          example: ws-86uXWfrrz6SiUEgG
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /3000/config-versions/cv-2zSbjUZti9E68o2m:
+    get:
+      tags:
+        - default
+      summary: config version by id
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /3000/workspaces/ws-86uXWfrrz6SiUEgG:
+    get:
+      tags:
+        - default
+      summary: workspace by id
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /3000/variables:
+    get:
+      tags:
+        - default
+      summary: variable by id and workspace id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ws-id
+          in: query
+          schema:
+            type: string
+          example: ws-yqac19FYhyKebCP8
+        - name: var-id
+          in: query
+          schema:
+            type: string
+          example: var-7WHVoW18oWK1nCGr
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /3000/aws/other:
+    post:
+      tags:
+        - default
+      summary: provision other
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: lourenco
+                count: 16
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: org
+          in: query
+          schema:
+            type: string
+          description: organization name
+          example: costa-org
+        - name: ws
+          in: query
+          schema:
+            type: string
+          description: workspace name
+          example: ws-1
+        - name: message
+          in: query
+          schema:
+            type: string
+          description: for the run
+          example: changes
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}

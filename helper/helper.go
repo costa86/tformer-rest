@@ -23,9 +23,9 @@ type OrganizationWorkspace struct {
 	WsName  string `form:"ws"`
 }
 
-const Address = "https://app.terraform.io" //cloud
+// const Address = "https://app.terraform.io" //cloud
 
-// const Address = "https://tfe.d.bbg" //enterprise
+const Address = "https://tfe.d.bbg" //enterprise
 
 type Variable struct {
 	Key          string `json:"key" binding:"required"`
