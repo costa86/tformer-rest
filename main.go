@@ -5,9 +5,12 @@ import (
 
 	aws "github.com/costa86/tformer-rest/cloud/aws"
 	gcp "github.com/costa86/tformer-rest/cloud/gcp"
+	"github.com/costa86/tformer-rest/run"
+
 	cv "github.com/costa86/tformer-rest/config_version"
 	"github.com/costa86/tformer-rest/database"
 	"github.com/costa86/tformer-rest/organization"
+	sv "github.com/costa86/tformer-rest/state_version"
 	"github.com/costa86/tformer-rest/user"
 	"github.com/costa86/tformer-rest/variable"
 	"github.com/costa86/tformer-rest/workspace"
@@ -20,6 +23,8 @@ const cvRoute = "config-versions"
 const varRoute = "variables"
 const wsRoute = "workspaces"
 const orgRoute = "organizations"
+const stateVersionRoute = "state-versions"
+const runRoute = "runs"
 
 func main() {
 	r := gin.Default()
@@ -50,6 +55,15 @@ func main() {
 
 	//user
 	r.GET("/whoami", user.Get)
+
+	//state version
+	r.GET(fmt.Sprintf("/%s", stateVersionRoute), sv.GetAll)
+	r.GET(fmt.Sprintf("/%s/:id", stateVersionRoute), sv.GetById)
+	r.GET(fmt.Sprintf("/%s/workspaces/:id", stateVersionRoute), sv.GetLatest)
+
+	//run
+	r.GET(fmt.Sprintf("/%s/workspaces/:id", runRoute), run.GetAll)
+	r.GET(fmt.Sprintf("/%s/:id", runRoute), run.GetById)
 
 	//database
 	r.GET("/records/whoami", database.WhoamiGet)
