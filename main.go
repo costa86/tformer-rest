@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/costa86/tformer-rest/cloud/aws"
+	aws "github.com/costa86/tformer-rest/cloud/aws"
+	gcp "github.com/costa86/tformer-rest/cloud/gcp"
 	cv "github.com/costa86/tformer-rest/config_version"
 	"github.com/costa86/tformer-rest/database"
 	"github.com/costa86/tformer-rest/organization"
@@ -25,6 +26,8 @@ func main() {
 
 	//aws
 	r.POST("/aws/other", aws.ProvisionOther)
+	//gcp
+	r.POST("/gcp/bucket", gcp.ProvisionBucket)
 
 	//workspace
 	r.GET(fmt.Sprintf("/%s", wsRoute), workspace.GetAll)

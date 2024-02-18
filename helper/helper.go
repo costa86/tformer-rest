@@ -5,8 +5,10 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,9 +25,9 @@ type OrganizationWorkspace struct {
 	WsName  string `form:"ws"`
 }
 
-// const Address = "https://app.terraform.io" //cloud
+const Address = "https://app.terraform.io" //cloud
 
-const Address = "https://tfe.d.bbg" //enterprise
+// const Address = "https://tfe.d.bbg" //enterprise
 
 type Variable struct {
 	Key          string `json:"key" binding:"required"`
@@ -76,12 +78,14 @@ func generateRandomString(length int) string {
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, length)
 	_, err := rand.Read(b)
+
 	if err != nil {
 		fmt.Println("Error reading random bytes:", err)
 		return ""
 	}
 
 	result := ""
+
 	for _, num := range b {
 		idx := big.NewInt(0).SetInt64(int64(num) % int64(len(charset)))
 		result += string(charset[idx.Int64()])
@@ -90,7 +94,17 @@ func generateRandomString(length int) string {
 	return result
 }
 
-func ProvisionTerraform(client tfe.Client, ws tfe.Workspace, virtualFile, message, token, org, address string) (string, error) {
+func createRun(
+	client tfe.Client,
+	ws tfe.Workspace,
+	virtualFile,
+	message,
+	token,
+	org,
+	address string,
+	autoApply,
+	destroy bool,
+) (string, error) {
 	randomName := generateRandomString(10)
 	configFileName := fmt.Sprintf("%s.tf", randomName)
 
@@ -120,10 +134,10 @@ func ProvisionTerraform(client tfe.Client, ws tfe.Workspace, virtualFile, messag
 	}
 
 	result, err := client.Runs.Create(ctx, tfe.RunCreateOptions{
-		AutoApply:            tfe.Bool(true),
+		AutoApply:            tfe.Bool(autoApply),
 		Workspace:            &ws,
 		ConfigurationVersion: cv,
-		IsDestroy:            tfe.Bool(false),
+		IsDestroy:            tfe.Bool(destroy),
 		Message:              tfe.String(message)})
 
 	if err != nil {
@@ -136,4 +150,74 @@ func ProvisionTerraform(client tfe.Client, ws tfe.Workspace, virtualFile, messag
 
 func GetCurrentTimestamp() string {
 	return time.Now().String()[:16]
+}
+
+type BasicConfig struct {
+	Organization,
+	Ws,
+	Message string
+	AutoApply,
+	Destroy bool
+}
+
+func getBool(queryValue string) bool {
+	var result bool
+
+	value, err := strconv.ParseBool(queryValue)
+	if err != nil {
+		result = false
+	} else {
+		result = value
+	}
+	return result
+}
+
+func getBasicConfig(c *gin.Context) BasicConfig {
+	return BasicConfig{
+		Organization: c.Query("org"),
+		Ws:           c.Query("ws"),
+		Message:      c.Query("message"),
+		AutoApply:    getBool(c.Query("aa")),
+		Destroy:      getBool(c.Query("destroy")),
+	}
+}
+
+func Provision(c *gin.Context, terraformFile string) {
+	ctx := context.Background()
+	basicConfig := getBasicConfig(c)
+	org := basicConfig.Organization
+	wsName := basicConfig.Ws
+	message := basicConfig.Message
+	token := GetToken(c)
+	client, err := GetClient(token)
+
+	if IssueWasFound(c, "", http.StatusBadRequest, err) {
+		return
+	}
+
+	ws, err := client.Workspaces.Read(ctx, org, wsName)
+
+	if IssueWasFound(c, "", http.StatusBadRequest, err) {
+		return
+	}
+
+	res, err := createRun(
+		*client,
+		*ws,
+		terraformFile,
+		message,
+		token,
+		org,
+		Address,
+		basicConfig.AutoApply,
+		basicConfig.Destroy,
+	)
+
+	if IssueWasFound(c, "", http.StatusBadRequest, err) {
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": res,
+	})
 }
